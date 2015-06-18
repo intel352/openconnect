@@ -148,6 +148,10 @@ static int openconnect_gnutls_read(struct openconnect_info *vpninfo, char *buf, 
 			vpn_progress(vpninfo, PRG_DEBUG, _("SSL socket closed uncleanly\n"));
 			return 0;
 #endif
+		} else if (done == GNUTLS_E_REHANDSHAKE) {
+			int ret = cstp_handshake(vpninfo, 0);
+			if (ret)
+				return ret;
 		} else {
 			vpn_progress(vpninfo, PRG_ERR, _("Failed to read from SSL socket: %s\n"),
 				     gnutls_strerror(done));
@@ -203,6 +207,10 @@ static int openconnect_gnutls_gets(struct openconnect_info *vpninfo, char *buf, 
 				ret = -EINTR;
 				break;
 			}
+		} else if (ret == GNUTLS_E_REHANDSHAKE) {
+			ret = cstp_handshake(vpninfo, 0);
+			if (ret)
+				return ret;
 		} else {
 			vpn_progress(vpninfo, PRG_ERR, _("Failed to read from SSL socket: %s\n"),
 				     gnutls_strerror(ret));
